@@ -1,57 +1,56 @@
-'use client';
-
 import axios from 'axios';
 import type { Note } from '@/types/note';
 
-interface fetchNotesProps {
+interface FetchNotesProps {
   search: string;
   page: number;
 }
 
-export interface fetchNotesResponse {
+export interface FetchNotesResponse {
   notes: Note[];
   totalPages: number;
 }
 
-interface createNoteProps {
+interface CreateNoteProps {
   id?: string;
   title: string;
   content: string;
   tag: string;
 }
 
-const myToken = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN as string;
+/** @ts-expect-error - Vite env types missing */
 
-axios.defaults.baseURL = 'https://notehub-public.goit.study/api';
-axios.defaults.headers.common['Authorization'] = `Bearer ${myToken}`;
+const myToken = import.meta.env.VITE_NOTEHUB_TOKEN;
+
+axios.defaults.baseURL = 'https://notehub-public-api.goit.study/api';
+
+
+axios.defaults.headers.common['Authorization'] = `NotesHub ${myToken}`;
+
+
 
 export const fetchNotes = async ({
   search,
   page,
-}: fetchNotesProps): Promise<fetchNotesResponse> => {
-  const options = {
-    params: {
-      page,
-      perPage: 12,
-      search,
-    },
-  };
+}: FetchNotesProps): Promise<FetchNotesResponse> => {
+  const response = await axios.get('/notes', {
+    params: { page, perPage: 12, search },
+  });
 
-  const response = await axios.get<fetchNotesResponse>('/notes', options);
   return response.data;
 };
 
-export async function fetchNoteById(id: Note['id']): Promise<Note> {
-  const response = await axios.get<Note>(`/notes/${id}`);
+export const fetchNoteById = async (id: Note['id']): Promise<Note> => {
+  const response = await axios.get(`/notes/${id}`);
   return response.data;
-}
+};
 
-export const createNote = async (data: createNoteProps) => {
-  const response = await axios.post<Note>('/notes', data);
+export const createNote = async (data: CreateNoteProps): Promise<Note> => {
+  const response = await axios.post('/notes', data);
   return response.data;
 };
 
 export const deleteNote = async (id: Note['id']): Promise<Note> => {
-  const response = await axios.delete<Note>(`/notes/${id}`);
+  const response = await axios.delete(`/notes/${id}`);
   return response.data;
 };
